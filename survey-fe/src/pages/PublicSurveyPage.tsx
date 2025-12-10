@@ -125,9 +125,10 @@ export default function PublicSurveyPage() {
         alignItems="center"
         minHeight="100vh"
         bgcolor="grey.100"
+        px={2}
       >
-        <Paper sx={{ p: 6, textAlign: 'center', maxWidth: 500 }}>
-          <Typography variant="h4" gutterBottom color="success.main">
+        <Paper sx={{ p: { xs: 3, sm: 6 }, textAlign: 'center', maxWidth: 500, width: '100%', mx: 2 }}>
+          <Typography variant="h4" gutterBottom color="success.main" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
             {t('public.submitted')}
           </Typography>
           <Typography color="text.secondary">
@@ -139,15 +140,15 @@ export default function PublicSurveyPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', py: 4 }}>
-      <Container maxWidth="md">
+    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.100', py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
+      <Container maxWidth="md" disableGutters sx={{ px: { xs: 0, sm: 2 } }}>
         {/* Survey header */}
-        <Paper sx={{ p: 4, mb: 3, borderTop: 4, borderColor: 'primary.main' }}>
-          <Typography variant="h4" gutterBottom>
+        <Paper sx={{ p: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 3 }, borderTop: 4, borderColor: 'primary.main' }}>
+          <Typography variant="h4" gutterBottom sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' } }}>
             {survey.title}
           </Typography>
           {survey.description && (
-            <Typography color="text.secondary">
+            <Typography color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
               {survey.description}
             </Typography>
           )}
@@ -155,7 +156,7 @@ export default function PublicSurveyPage() {
 
         {/* Questions */}
         {survey.questions.map((question: PublicQuestion) => (
-          <Paper key={question.questionId} sx={{ p: 3, mb: 2 }}>
+          <Paper key={question.questionId} sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 1.5, sm: 2 } }}>
             <QuestionRenderer
               question={{
                 id: question.questionId,
@@ -175,12 +176,14 @@ export default function PublicSurveyPage() {
         ))}
 
         {/* Submit button */}
-        <Box display="flex" justifyContent="center" mt={3}>
+        <Box display="flex" justifyContent="center" mt={{ xs: 2, sm: 3 }} mb={{ xs: 2, sm: 0 }}>
           <Button
             variant="contained"
             size="large"
             onClick={handleSubmit}
             disabled={submitMutation.isPending}
+            fullWidth
+            sx={{ maxWidth: { xs: '100%', sm: 300 } }}
           >
             {submitMutation.isPending ? t('preview.submitting') : t('public.submit')}
           </Button>

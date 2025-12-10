@@ -44,6 +44,11 @@ const resources = {
       'questionBank.copy': 'Copy Question',
       'questionBank.empty': 'No questions found',
       
+      // Mobile editor panels
+      'editor.canvas': 'Canvas',
+      'editor.questionBank': 'Questions',
+      'editor.toolbox': 'Toolbox',
+      
       // Toolbox
       'toolbox.title': 'Add New Question',
       'toolbox.surveySettings': 'Survey Settings',

@@ -86,16 +86,21 @@ export default function SubmissionViewerPage() {
         {t('action.back')}
       </Button>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h5" gutterBottom>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
+        <Typography variant="h5" gutterBottom sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           Submission Details
         </Typography>
-        <Box display="flex" gap={4} flexWrap="wrap">
-          <Box>
+        <Box 
+          display="flex" 
+          gap={{ xs: 2, sm: 4 }} 
+          flexWrap="wrap"
+          flexDirection={{ xs: 'column', sm: 'row' }}
+        >
+          <Box sx={{ minWidth: 0, flex: { xs: '1 1 100%', sm: '0 1 auto' } }}>
             <Typography variant="caption" color="text.secondary">
               Submission ID
             </Typography>
-            <Typography sx={{ fontFamily: 'monospace' }}>
+            <Typography sx={{ fontFamily: 'monospace', fontSize: { xs: '0.75rem', sm: '1rem' }, wordBreak: 'break-all' }}>
               {submission.id}
             </Typography>
           </Box>
@@ -103,7 +108,7 @@ export default function SubmissionViewerPage() {
             <Typography variant="caption" color="text.secondary">
               {t('results.submittedAt')}
             </Typography>
-            <Typography>
+            <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
               {new Date(submission.submittedAt).toLocaleString()}
             </Typography>
           </Box>
@@ -112,14 +117,14 @@ export default function SubmissionViewerPage() {
               <Typography variant="caption" color="text.secondary">
                 Submitter
               </Typography>
-              <Typography>{submission.submitterId}</Typography>
+              <Typography sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>{submission.submitterId}</Typography>
             </Box>
           )}
         </Box>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
+      <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
           Answers
         </Typography>
         <Divider sx={{ mb: 2 }} />
