@@ -1,4 +1,4 @@
-FROM maven:3-amazoncorretto-21-alpine AS maven
+FROM maven:3-amazoncorretto-25-alpine AS maven
 WORKDIR /usr/src/app
 COPY pom.xml .
 
