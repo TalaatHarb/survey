@@ -112,12 +112,13 @@ export default function QuestionBankPanel({ surveyId, onQuestionAdded }: Questio
                   borderRadius: 1,
                   border: 1,
                   borderColor: 'divider',
+                  pr: 10,
                 }}
               >
                 <ListItemText
                   primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="body2" noWrap sx={{ flex: 1 }}>
+                    <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                      <Typography variant="body2" sx={{ flex: '1 1 100%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {question.title}
                       </Typography>
                       <Chip
