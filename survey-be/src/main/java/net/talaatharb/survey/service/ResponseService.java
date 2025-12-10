@@ -77,7 +77,7 @@ public class ResponseService {
      */
     public SurveyResponseDto submitResponse(UUID surveyId, SubmitSurveyResponseDto dto, String submitterIp) {
         // Verify survey is published
-        SurveyEntity survey = surveyRepository.findByIdAndPublishedTrueAndArchivedFalse(surveyId)
+        surveyRepository.findByIdAndPublishedTrueAndArchivedFalse(surveyId)
                 .orElseThrow(() -> new ForbiddenException("Survey is not accepting responses"));
 
         // Get required questions
@@ -192,17 +192,13 @@ public class ResponseService {
      */
     private void validateAnswer(QuestionResponseDto answer, QuestionEntity question) {
         switch (question.getType()) {
-            case SHORT_ANSWER:
-            case PARAGRAPH:
-                if (answer.getTextAnswer() != null && question.getMaxLength() != null) {
-                    if (answer.getTextAnswer().length() > question.getMaxLength()) {
-                        throw new ValidationException("Answer exceeds maximum length for question: " + question.getTitle());
-                    }
+            case SHORT_ANSWER, PARAGRAPH:
+                if (answer.getTextAnswer() != null && question.getMaxLength() != null && answer.getTextAnswer().length() > question.getMaxLength()) {
+                    throw new ValidationException("Answer exceeds maximum length for question: " + question.getTitle());
                 }
                 break;
 
-            case MULTIPLE_CHOICE:
-            case DROPDOWN:
+            case MULTIPLE_CHOICE, DROPDOWN:
                 if (answer.getSelectedOptionIds() != null && answer.getSelectedOptionIds().size() > 1) {
                     throw new ValidationException("Only one option can be selected for: " + question.getTitle());
                 }
@@ -216,11 +212,9 @@ public class ResponseService {
             case LINEAR_SCALE:
                 if (answer.getNumericAnswer() != null) {
                     LinearScaleConfig config = question.getLinearScaleConfig();
-                    if (config != null) {
-                        if (answer.getNumericAnswer() < config.getMinValue() || 
-                            answer.getNumericAnswer() > config.getMaxValue()) {
-                            throw new ValidationException("Scale value out of range for: " + question.getTitle());
-                        }
+                    if (config != null && (answer.getNumericAnswer() < config.getMinValue() || 
+                        answer.getNumericAnswer() > config.getMaxValue())) {
+                        throw new ValidationException("Scale value out of range for: " + question.getTitle());
                     }
                 }
                 break;

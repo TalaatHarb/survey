@@ -22,8 +22,8 @@ import { questionApi, surveyApi } from '../../services/api';
 import type { Question, QuestionType } from '../../types';
 
 interface QuestionBankPanelProps {
-  surveyId: string;
-  onQuestionAdded: () => void;
+  readonly surveyId: string;
+  readonly onQuestionAdded: () => void;
 }
 
 const questionTypeColors: Record<QuestionType, string> = {

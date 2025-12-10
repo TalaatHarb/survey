@@ -6,7 +6,6 @@ import net.talaatharb.survey.dto.SurveyAnalyticsDto.DailySubmissionCount;
 import net.talaatharb.survey.dto.SurveyAnalyticsDto.QuestionAnalyticsDto;
 import net.talaatharb.survey.dto.SurveyAnalyticsDto.QuestionAnalyticsDto.OptionCount;
 import net.talaatharb.survey.entity.QuestionEntity;
-import net.talaatharb.survey.entity.QuestionType;
 import net.talaatharb.survey.entity.SurveyEntity;
 import net.talaatharb.survey.entity.SurveyQuestionLinkEntity;
 import net.talaatharb.survey.exception.ResourceNotFoundException;
@@ -79,9 +78,7 @@ public class AnalyticsService {
                 .totalResponses(totalResponses);
 
         switch (question.getType()) {
-            case MULTIPLE_CHOICE:
-            case CHECKBOXES:
-            case DROPDOWN:
+            case MULTIPLE_CHOICE, CHECKBOXES, DROPDOWN:
                 builder.optionCounts(buildOptionCounts(surveyId, questionId, totalResponses));
                 break;
 
@@ -89,8 +86,7 @@ public class AnalyticsService {
                 buildScaleAnalytics(builder, surveyId, questionId);
                 break;
 
-            case SHORT_ANSWER:
-            case PARAGRAPH:
+            case SHORT_ANSWER, PARAGRAPH:
                 builder.textSamples(getTextSamples(surveyId, questionId));
                 break;
 

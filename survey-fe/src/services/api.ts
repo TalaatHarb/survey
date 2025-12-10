@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { environment } from '../environment/environment';
 import type { 
   Survey, 
   Question, 
@@ -13,7 +14,7 @@ import type {
   Page 
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/survey';
+const API_BASE_URL = `${environment.apiUrl}/survey`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,

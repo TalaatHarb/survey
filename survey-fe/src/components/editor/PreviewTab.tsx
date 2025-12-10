@@ -14,7 +14,7 @@ import type { PublicQuestion } from '../../types';
 import QuestionRenderer from '../questions/QuestionRenderer';
 
 interface PreviewTabProps {
-  surveyId: string;
+  readonly surveyId: string;
 }
 
 export default function PreviewTab({ surveyId }: PreviewTabProps) {

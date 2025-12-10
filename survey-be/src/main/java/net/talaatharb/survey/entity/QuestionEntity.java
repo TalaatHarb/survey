@@ -44,13 +44,11 @@ public class QuestionEntity {
     private Integer maxLength;
 
     @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "minValue", column = @Column(name = "scale_min_value")),
-        @AttributeOverride(name = "maxValue", column = @Column(name = "scale_max_value")),
-        @AttributeOverride(name = "step", column = @Column(name = "scale_step")),
-        @AttributeOverride(name = "leftLabel", column = @Column(name = "scale_left_label")),
-        @AttributeOverride(name = "rightLabel", column = @Column(name = "scale_right_label"))
-    })
+    @AttributeOverride(name = "minValue", column = @Column(name = "scale_min_value"))
+    @AttributeOverride(name = "maxValue", column = @Column(name = "scale_max_value"))
+    @AttributeOverride(name = "step", column = @Column(name = "scale_step"))
+    @AttributeOverride(name = "leftLabel", column = @Column(name = "scale_left_label"))
+    @AttributeOverride(name = "rightLabel", column = @Column(name = "scale_right_label"))
     private LinearScaleConfig linearScaleConfig;
 
     @Builder.Default
