@@ -7,7 +7,6 @@ import {
   Toolbar,
   Typography,
   Button,
-  Container,
   IconButton,
   Drawer,
   List,
@@ -105,16 +104,16 @@ export default function Layout() {
         {drawer}
       </Drawer>
       
-      <Container 
-        maxWidth="xl" 
+      <Box 
         sx={{ 
           flex: 1, 
           py: { xs: 2, sm: 3 },
           px: { xs: 1, sm: 2, md: 3 },
+          width: '100%',
         }}
       >
         <Outlet />
-      </Container>
+      </Box>
     </Box>
   );
 }

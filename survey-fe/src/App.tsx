@@ -8,7 +8,7 @@ import SubmissionViewerPage from './pages/SubmissionViewerPage';
 
 function App() {
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', width: '100vw', bgcolor: 'background.default' }}>
       <Routes>
         {/* Admin routes with layout */}
         <Route path="/" element={<Layout />}>
