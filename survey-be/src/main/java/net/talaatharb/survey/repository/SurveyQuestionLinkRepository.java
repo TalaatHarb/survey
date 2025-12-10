@@ -35,7 +35,9 @@ public interface SurveyQuestionLinkRepository extends JpaRepository<SurveyQuesti
     /**
      * Delete all links for a survey.
      */
-    void deleteBySurveyId(UUID surveyId);
+    @Modifying
+    @Query("DELETE FROM SurveyQuestionLinkEntity l WHERE l.survey.id = :surveyId")
+    void deleteBySurveyId(@Param("surveyId") UUID surveyId);
 
     /**
      * Count links for a survey.

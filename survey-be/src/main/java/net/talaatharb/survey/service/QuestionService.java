@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -77,6 +76,23 @@ public class QuestionService {
     }
 
     /**
+     * Check if a question exists by ID.
+     */
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID id) {
+        return questionRepository.existsById(id);
+    }
+
+    /**
+     * Get entity by ID (for import - allows archived).
+     */
+    @Transactional(readOnly = true)
+    public QuestionEntity getEntityById(UUID id) {
+        return questionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Question", "id", id));
+    }
+
+    /**
      * Create a new question.
      */
     public QuestionDto createQuestion(QuestionDto dto) {
@@ -119,6 +135,8 @@ public class QuestionService {
 
         // Update options - clear and re-add
         entity.getOptions().clear();
+        questionRepository.saveAndFlush(entity); // Flush to delete orphaned options
+        
         if (dto.getOptions() != null) {
             for (int i = 0; i < dto.getOptions().size(); i++) {
                 QuestionOptionDto optionDto = dto.getOptions().get(i);

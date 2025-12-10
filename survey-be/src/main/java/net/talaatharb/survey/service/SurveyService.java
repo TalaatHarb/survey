@@ -232,4 +232,149 @@ public class SurveyService {
             throw new ValidationException("A survey must have at least one question to be published");
         }
     }
+
+    /**
+     * Export a survey with all questions and configuration.
+     */
+    @Transactional(readOnly = true)
+    public SurveyExportDto exportSurvey(UUID surveyId) {
+        SurveyEntity survey = surveyRepository.findByIdAndArchivedFalse(surveyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Survey", "id", surveyId));
+
+        List<SurveyQuestionLinkEntity> links = linkRepository.findBySurveyIdOrderByOrderIndexAsc(surveyId);
+
+        List<SurveyExportDto.ExportQuestionLinkDto> questionLinks = links.stream()
+                .map(link -> {
+                    QuestionEntity question = link.getQuestion();
+                    
+                    List<SurveyExportDto.ExportQuestionOptionDto> options = question.getOptions().stream()
+                            .map(opt -> SurveyExportDto.ExportQuestionOptionDto.builder()
+                                    .label(opt.getLabel())
+                                    .orderIndex(opt.getOrderIndex())
+                                    .build())
+                            .toList();
+
+                    SurveyExportDto.ExportQuestionDto questionDto = SurveyExportDto.ExportQuestionDto.builder()
+                            .id(question.getId())
+                            .title(question.getTitle())
+                            .description(question.getDescription())
+                            .type(question.getType())
+                            .required(question.isRequired())
+                            .maxLength(question.getMaxLength())
+                            .linearScaleConfig(questionMapper.toLinearScaleConfigDto(question.getLinearScaleConfig()))
+                            .options(options.isEmpty() ? null : options)
+                            .build();
+
+                    return SurveyExportDto.ExportQuestionLinkDto.builder()
+                            .orderIndex(link.getOrderIndex())
+                            .requiredOverride(link.getRequiredOverride())
+                            .labelOverride(link.getLabelOverride())
+                            .descriptionOverride(link.getDescriptionOverride())
+                            .hidden(link.isHidden())
+                            .question(questionDto)
+                            .build();
+                })
+                .toList();
+
+        return SurveyExportDto.builder()
+                .id(survey.getId())
+                .title(survey.getTitle())
+                .description(survey.getDescription())
+                .published(survey.isPublished())
+                .questions(questionLinks)
+                .build();
+    }
+
+    /**
+     * Import a survey. Creates new questions if they don't exist (no ID or ID not found),
+     * updates existing questions if they exist (matched by ID).
+     */
+    public SurveyDto importSurvey(SurveyExportDto importData) {
+        // Create or update the survey
+        SurveyEntity survey;
+        boolean isUpdate = importData.getId() != null && surveyRepository.existsById(importData.getId());
+        
+        if (isUpdate) {
+            survey = surveyRepository.findById(importData.getId()).orElseThrow();
+            survey.setTitle(importData.getTitle());
+            survey.setDescription(importData.getDescription());
+            survey.setPublished(Boolean.TRUE.equals(importData.getPublished()));
+            survey = surveyRepository.save(survey);
+            
+            // Remove existing links and flush to avoid constraint violations
+            linkRepository.deleteBySurveyId(survey.getId());
+            linkRepository.flush();
+        } else {
+            survey = SurveyEntity.builder()
+                    .title(importData.getTitle())
+                    .description(importData.getDescription())
+                    .published(Boolean.TRUE.equals(importData.getPublished()))
+                    .build();
+            survey = surveyRepository.save(survey);
+        }
+
+        // Process questions and links
+        if (importData.getQuestions() != null) {
+            for (SurveyExportDto.ExportQuestionLinkDto linkData : importData.getQuestions()) {
+                SurveyExportDto.ExportQuestionDto questionData = linkData.getQuestion();
+                
+                // Create or update question
+                QuestionEntity question;
+                if (questionData.getId() != null && questionService.existsById(questionData.getId())) {
+                    // Update existing question
+                    QuestionDto dto = QuestionDto.builder()
+                            .title(questionData.getTitle())
+                            .description(questionData.getDescription())
+                            .type(questionData.getType())
+                            .required(questionData.getRequired())
+                            .maxLength(questionData.getMaxLength())
+                            .linearScaleConfig(questionData.getLinearScaleConfig())
+                            .options(questionData.getOptions() != null ? 
+                                    questionData.getOptions().stream()
+                                            .map(opt -> QuestionOptionDto.builder()
+                                                    .label(opt.getLabel())
+                                                    .orderIndex(opt.getOrderIndex())
+                                                    .build())
+                                            .toList() : null)
+                            .build();
+                    questionService.updateQuestion(questionData.getId(), dto);
+                    question = questionService.getEntityById(questionData.getId());
+                } else {
+                    // Create new question
+                    QuestionDto dto = QuestionDto.builder()
+                            .title(questionData.getTitle())
+                            .description(questionData.getDescription())
+                            .type(questionData.getType())
+                            .required(questionData.getRequired())
+                            .maxLength(questionData.getMaxLength())
+                            .linearScaleConfig(questionData.getLinearScaleConfig())
+                            .options(questionData.getOptions() != null ? 
+                                    questionData.getOptions().stream()
+                                            .map(opt -> QuestionOptionDto.builder()
+                                                    .label(opt.getLabel())
+                                                    .orderIndex(opt.getOrderIndex())
+                                                    .build())
+                                            .toList() : null)
+                            .build();
+                    QuestionDto created = questionService.createQuestion(dto);
+                    question = questionService.getEntityById(created.getId());
+                }
+
+                // Create link
+                SurveyQuestionLinkEntity link = SurveyQuestionLinkEntity.builder()
+                        .survey(survey)
+                        .question(question)
+                        .orderIndex(linkData.getOrderIndex())
+                        .requiredOverride(linkData.getRequiredOverride())
+                        .labelOverride(linkData.getLabelOverride())
+                        .descriptionOverride(linkData.getDescriptionOverride())
+                        .hidden(Boolean.TRUE.equals(linkData.getHidden()))
+                        .build();
+                
+                linkRepository.save(link);
+            }
+        }
+
+        return surveyMapper.toDto(survey);
+    }
 }

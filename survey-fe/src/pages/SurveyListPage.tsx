@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  Grid,
   TextField,
   InputAdornment,
   Chip,
@@ -26,6 +25,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LinkIcon from '@mui/icons-material/Link';
+import DownloadIcon from '@mui/icons-material/Download';
+import UploadIcon from '@mui/icons-material/Upload';
 import { surveyApi } from '../services/api';
 import type { Survey } from '../types';
 
@@ -36,6 +37,8 @@ export default function SurveyListPage() {
   
   const [search, setSearch] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<Survey | null>(null);
+  const [importDialog, setImportDialog] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['surveys', search],
@@ -50,14 +53,42 @@ export default function SurveyListPage() {
     },
   });
 
+  const importMutation = useMutation({
+    mutationFn: (file: File) => surveyApi.importSurvey(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['surveys'] });
+      setImportDialog(false);
+      setImportFile(null);
+    },
+  });
+
   const handleDelete = () => {
     if (deleteDialog?.id) {
       deleteMutation.mutate(deleteDialog.id);
     }
   };
 
+  const handleExport = async (surveyId: string, title: string) => {
+    const surveyData = await surveyApi.exportSurvey(surveyId);
+    const blob = new Blob([JSON.stringify(surveyData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = () => {
+    if (importFile) {
+      importMutation.mutate(importFile);
+    }
+  };
+
   const copyPublicLink = (surveyId: string) => {
-    const url = `${window.location.origin}/public/${surveyId}`;
+    const url = `${globalThis.location.origin}/public/${surveyId}`;
     navigator.clipboard.writeText(url);
   };
 
@@ -77,16 +108,25 @@ export default function SurveyListPage() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
         <Typography variant="h4">{t('surveys.title')}</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          component={RouterLink}
-          to="/editor"
-        >
-          {t('surveys.create')}
-        </Button>
+        <Box display="flex" gap={1} flexWrap="wrap">
+          <Button
+            variant="outlined"
+            startIcon={<UploadIcon />}
+            onClick={() => setImportDialog(true)}
+          >
+            Import
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            component={RouterLink}
+            to="/editor"
+          >
+            {t('surveys.create')}
+          </Button>
+        </Box>
       </Box>
 
       <TextField
@@ -118,45 +158,54 @@ export default function SurveyListPage() {
           </Button>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+            },
+            gap: 3,
+          }}
+        >
           {surveys.map((survey) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={survey.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ flex: 1 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                    <Typography variant="h6" noWrap sx={{ flex: 1 }}>
-                      {survey.title}
-                    </Typography>
-                    <Chip
-                      label={survey.published ? t('surveys.published') : t('surveys.draft')}
-                      color={survey.published ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </Box>
-                  
-                  {survey.description && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mb: 1,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {survey.description}
-                    </Typography>
-                  )}
-                  
-                  <Typography variant="caption" color="text.secondary">
-                    {t('surveys.questions', { count: survey.questionCount || 0 })}
+            <Card key={survey.id} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flex: 1 }}>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                  <Typography variant="h6" noWrap sx={{ flex: 1 }}>
+                    {survey.title}
                   </Typography>
-                </CardContent>
+                  <Chip
+                    label={survey.published ? t('surveys.published') : t('surveys.draft')}
+                    color={survey.published ? 'success' : 'default'}
+                    size="small"
+                  />
+                </Box>
                 
-                <CardActions>
+                {survey.description && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      mb: 1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    {survey.description}
+                  </Typography>
+                )}
+                
+                <Typography variant="caption" color="text.secondary">
+                  {t('surveys.questions', { count: survey.questionCount || 0 })}
+                </Typography>
+              </CardContent>
+                
+                <CardActions sx={{ flexWrap: 'wrap', gap: 0.5 }}>
                   <Button
                     size="small"
                     startIcon={<EditIcon />}
@@ -164,6 +213,14 @@ export default function SurveyListPage() {
                   >
                     {t('action.edit')}
                   </Button>
+                  
+                  <IconButton
+                    size="small"
+                    onClick={() => handleExport(survey.id!, survey.title)}
+                    title="Export survey"
+                  >
+                    <DownloadIcon fontSize="small" />
+                  </IconButton>
                   
                   {survey.published && (
                     <IconButton
@@ -186,9 +243,8 @@ export default function SurveyListPage() {
                   </IconButton>
                 </CardActions>
               </Card>
-            </Grid>
           ))}
-        </Grid>
+        </Box>
       )}
 
       {/* Delete confirmation dialog */}
@@ -207,6 +263,44 @@ export default function SurveyListPage() {
             disabled={deleteMutation.isPending}
           >
             {t('action.delete')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Import dialog */}
+      <Dialog open={importDialog} onClose={() => setImportDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Import Survey</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Upload a survey JSON file to import. The survey and its questions will be created or updated.
+            </Typography>
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              {importFile ? importFile.name : 'Choose File'}
+              <input
+                type="file"
+                hidden
+                accept="application/json,.json"
+                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+              />
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setImportDialog(false); setImportFile(null); }}>
+            {t('action.cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleImport}
+            disabled={!importFile || importMutation.isPending}
+          >
+            Import
           </Button>
         </DialogActions>
       </Dialog>

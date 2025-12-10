@@ -1,8 +1,10 @@
 package net.talaatharb.survey.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.talaatharb.survey.dto.*;
+import net.talaatharb.survey.exception.ValidationException;
 import net.talaatharb.survey.service.AnalyticsService;
 import net.talaatharb.survey.service.ResponseService;
 import net.talaatharb.survey.service.SurveyService;
@@ -13,7 +15,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -156,5 +160,35 @@ public class SurveyController {
             @PathVariable UUID submissionId) {
         SurveyResponseDto submission = responseService.getResponseById(surveyId, submissionId);
         return ResponseEntity.ok(submission);
+    }
+
+    // ==================== Import/Export ====================
+
+    /**
+     * Export a survey with all its questions and configuration.
+     */
+    @GetMapping("/{surveyId}/export")
+    public ResponseEntity<SurveyExportDto> exportSurvey(@PathVariable UUID surveyId) {
+        SurveyExportDto exportData = surveyService.exportSurvey(surveyId);
+        return ResponseEntity.ok(exportData);
+    }
+
+    /**
+     * Import a survey from JSON file. Creates new questions if they don't exist,
+     * updates existing questions if they do (matched by ID).
+     */
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    public ResponseEntity<SurveyDto> importSurvey(@RequestParam("file") MultipartFile file) {
+        try {
+            // Parse JSON from file
+            ObjectMapper objectMapper = new ObjectMapper();
+            SurveyExportDto importData = objectMapper.readValue(file.getInputStream(), SurveyExportDto.class);
+            
+            // Import the survey
+            SurveyDto survey = surveyService.importSurvey(importData);
+            return ResponseEntity.status(HttpStatus.CREATED).body(survey);
+        } catch (IOException e) {
+            throw new ValidationException("Invalid JSON file: " + e.getMessage());
+        }
     }
 }

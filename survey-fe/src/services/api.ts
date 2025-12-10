@@ -87,6 +87,23 @@ export const surveyApi = {
     const response = await api.get<SurveyResponse>(`/v1/admin/surveys/${surveyId}/results/submissions/${submissionId}`);
     return response.data;
   },
+
+  // Import/Export
+  exportSurvey: async (surveyId: string): Promise<Survey> => {
+    const response = await api.get<Survey>(`/v1/admin/surveys/${surveyId}/export`);
+    return response.data;
+  },
+
+  importSurvey: async (file: File): Promise<Survey> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post<Survey>('/v1/admin/surveys/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };
 
 // ==================== Questions (Admin) ====================
