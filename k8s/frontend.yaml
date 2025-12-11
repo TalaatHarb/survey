@@ -64,10 +64,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - fe.talaatharb.net
+    - survey-fe.talaatharb.net
     secretName: frontend-tls
   rules:
-  - host: fe.talaatharb.net
+  - host: survey-fe.talaatharb.net
     http:
       paths:
       - path: /
