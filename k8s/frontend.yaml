@@ -12,7 +12,7 @@ metadata:
   name: frontend-deployment
   namespace: survey
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -24,6 +24,7 @@ spec:
       containers:
       - name: frontend
         image: talaatharb/survey:fe
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         envFrom:

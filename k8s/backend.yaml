@@ -4,7 +4,7 @@ metadata:
   name: backend-deployment
   namespace: survey
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -16,19 +16,20 @@ spec:
       containers:
       - name: backend
         image: talaatharb/survey:be
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         livenessProbe:
           httpGet:
             path: /survey/actuator/health/liveness
             port: 8080
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /survey/actuator/health/readiness
             port: 8080
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 10
 ---
 apiVersion: v1
